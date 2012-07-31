@@ -105,6 +105,12 @@ class PrestaShopWebService(object):
         self.headers = headers
         if self.headers is None:
             self.headers = {'User-agent': 'Prestapyt: Python Prestashop Library'}
+        
+        # init http client in the init for re-use the same connection for all call
+        self.client = httplib2.Http(**self.client_args)
+        # Prestashop use the key as username without password
+        self.client.add_credentials(self._api_key, False)
+        self.client.follow_all_redirects = True
 
     def _check_status_code(self, status_code, content):
         """
