@@ -295,7 +295,7 @@ class PrestaShopWebService(object):
             return self._parse(self._execute(url, 'POST', body=body, add_headers=headers)[2])
         elif xml is not None:
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-            return self._parse(self._execute(url, 'POST', body=urllib.urlencode({'xml': xml}), add_headers=headers)[2])
+            return self._parse(self._execute(url, 'POST', body=urllib.urlencode({'xml': xml.encode('utf-8')}), add_headers=headers)[2])
         else:
             raise PrestaShopWebServiceError('Undefined data.')
 
@@ -366,7 +366,7 @@ class PrestaShopWebService(object):
         """
         return self._execute(url, 'HEAD')[1]
 
-    def edit(self, resource, resource_id, content):
+    def edit(self, resource, content):
         """
         Edit (PUT) a resource.
 
@@ -375,7 +375,7 @@ class PrestaShopWebService(object):
         @param content: modified XML as string of the resource.
         @return: an ElementTree of the Webservice's response
         """
-        full_url = "%s%s/%s" % (self._api_url, resource, resource_id)
+        full_url = "%s%s" % (self._api_url, resource)
         return self.edit_with_url(full_url, content)
 
     def edit_with_url(self, url, content):
@@ -547,11 +547,17 @@ class PrestaShopWebServiceDict(PrestaShopWebService):
         @param files: a sequence of (type, filename, value) elements for data to be uploaded as files.
         @return: a dict of the response from the web service
         """
+<<<<<<< HEAD
         if content is not None and isinstance(content, dict):
             xml_content = dict2xml.dict2xml({'prestashop': content})
         else:
             xml_content = content
         return super(PrestaShopWebServiceDict, self).add_with_url(url, xml_content, files)
+=======
+        xml_content = dict2xml.dict2xml({'prestashop': content})
+        res = super(PrestaShopWebServiceDict, self).add_with_url(url, xml_content)
+        return res['prestashop'][res['prestashop'].keys()[0]]['id'] 
+>>>>>>> [IMP] fix encoding bug, remove useless parameter for edit
 
     def edit_with_url(self, url, content):
         """
