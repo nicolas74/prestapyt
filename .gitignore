@@ -1,5 +1,6 @@
 build
 dist
 prestapyt.egg-info
+*~
 *.pyc
 tags
