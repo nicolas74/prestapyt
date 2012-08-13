@@ -188,7 +188,7 @@ class PrestaShopWebService(object):
             self.http_client.follow_all_redirects = True
 
         if self.debug:
-            print "Execute url: %s / method: %s" % (url, method)
+            print "Execute url: %s / method: %s\nbody: %s" % (url, method, body)
 
         request_headers = self.headers.copy()
         request_headers.update(add_headers)
@@ -202,6 +202,7 @@ class PrestaShopWebService(object):
 
         self._check_status_code(status_code, content)
         self._check_version(header.get('psws-version'))
+
         return status_code, header, content
 
     def _parse(self, content):
