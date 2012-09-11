@@ -21,6 +21,7 @@ import urllib
 import warnings
 import httplib2
 import mimetypes
+import requests
 import xml2dict
 import dict2xml
 import unicode_encode
@@ -35,6 +36,7 @@ except ImportError, e:
     from xml.etree import ElementTree
 
 from .version import __author__, __version__
+requests.defaults.defaults['base_headers']['User-Agent'] = 'Prestapyt: Python Prestashop Library'
 
 
 class PrestaShopWebServiceError(Exception):
@@ -89,7 +91,6 @@ class PrestaShopWebService(object):
 
         # required to hit prestashop
         self._api_url = api_url
-        self._api_key = api_key
 
         # add a trailing slash to the url if there is not one
         if not self._api_url.endswith('/'):
@@ -101,18 +102,13 @@ class PrestaShopWebService(object):
 
         # optional arguments
         self.debug = debug
-        self.client_args = client_args
+        client_args.update({'auth' : (api_key, '')})
 
         # use header you coders you want, otherwise, use a default
-        self.headers = headers
-        if self.headers is None:
-            self.headers = {'User-agent': 'Prestapyt: Python Prestashop Library',
-                            'Authorization': 'Basic {0}'.format(base64.b64encode('{0}:{1}'.format(self._api_key, '')))}
+        self.headers = {} if headers is None else headers
 
         # init http client in the init for re-use the same connection for all call
-        self.client = httplib2.Http(**self.client_args)
-        # Prestashop use the key as username without password
-        self.client.follow_all_redirects = True
+        self.client = requests.session(**client_args)
 
     def _check_status_code(self, status_code, content):
         """
@@ -151,6 +147,7 @@ class PrestaShopWebService(object):
                      "Please upgrade/downgrade this library") % (version,))
         return True
 
+<<<<<<< HEAD
     def _parse_error(self, xml_content):
         """
         Take the XML content as string and extracts the PrestaShop error
@@ -169,6 +166,9 @@ class PrestaShopWebService(object):
         return error_msg
 
     def _execute(self, url, method, body=None, add_headers=None):
+=======
+    def _execute(self, url, method, data=None, add_headers=None):
+>>>>>>> [IMP] replace httplib2 by resquests lib
         """
         Execute a request on the PrestaShop Webservice
 
@@ -194,22 +194,31 @@ class PrestaShopWebService(object):
             #    pretty_body = xml.toprettyxml(indent="  ")
             #else:
             #    pretty_body = body
-            print "Execute url: %s / method: %s\nbody: %s" % (url, method, body)
+            print "Execute url: %s / method: %s\nbody: %s" % (url, method, data)
 
         request_headers = self.headers.copy()
         request_headers.update(add_headers)
 
+<<<<<<< HEAD
         header, content = self.http_client.request(url, method, body=body, headers=request_headers)
         status_code = int(header['status'])
+=======
+        r = self.client.request(method, url, data=data, headers=request_headers)
+>>>>>>> [IMP] replace httplib2 by resquests lib
 
         if self.debug: # TODO better debug logs
             print ("Response code: %s\nResponse headers:\n%s\nResponse body:\n%s"
-                   % (status_code, header, content))
+                   % (r.status_code, r.headers, r.content))
 
+<<<<<<< HEAD
         self._check_status_code(status_code, content)
         self._check_version(header.get('psws-version'))
+=======
+        self._check_status_code(r.status_code)
+        self._check_version(r.headers.get('psws-version'))
+>>>>>>> [IMP] replace httplib2 by resquests lib
 
-        return status_code, header, content
+        return r
 
     def _parse(self, content):
         """
@@ -302,6 +311,7 @@ class PrestaShopWebService(object):
         @param files: a sequence of (type, filename, value) elements for data to be uploaded as files.
         @return: an ElementTree of the response from the web service
         """
+<<<<<<< HEAD
         if files is not None:
             headers, body = self.encode_multipart_formdata(files)
             return self._parse(self._execute(url, 'POST', body=body, add_headers=headers)[2])
@@ -310,6 +320,11 @@ class PrestaShopWebService(object):
             return self._parse(self._execute(url, 'POST', body=urllib.urlencode({'xml': xml.encode('utf-8')}), add_headers=headers)[2])
         else:
             raise PrestaShopWebServiceError('Undefined data.')
+=======
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        r = self._execute(url, 'POST', data=urllib.urlencode({'xml': xml.encode('utf-8')}), add_headers=headers)
+        return self._parse(r.content)
+>>>>>>> [IMP] replace httplib2 by resquests lib
 
     def search(self, resource, options=None):
         """
@@ -351,7 +366,7 @@ class PrestaShopWebService(object):
         @param url: An URL which explicitly sets the resource type and ID to retrieve
         @return: an ElementTree of the resource
         """
-        return self._parse(self._execute(url, 'GET')[2])
+        return self._parse(self._execute(url, 'GET').content)
 
     def head(self, resource, resource_id=None, options=None):
         """
@@ -377,7 +392,7 @@ class PrestaShopWebService(object):
         @param url: An URL which explicitly sets the resource type and ID to retrieve
         @return: the header of the response as a dict
         """
-        return self._execute(url, 'HEAD')[1]
+        return self._execute(url, 'HEAD').headers
 
     def edit(self, resource, content):
         """
@@ -400,7 +415,8 @@ class PrestaShopWebService(object):
         @return: an ElementTree of the Webservice's response
         """
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        return self._parse(self._execute(unicode_encode.encode(url), 'PUT', body=unicode_encode.encode(content), add_headers=headers)[2])
+        r = self._execute(unicode_encode.encode(url), 'PUT', data=unicode_encode.encode(content), add_headers=headers)
+        return self._parse(r.content)
 
     def delete(self, resource, resource_ids):
         """
