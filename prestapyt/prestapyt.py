@@ -46,12 +46,14 @@ class PrestaShopWebServiceError(Exception):
     from prestapyt import PrestaShopWebServiceError
     """
 
-    def __init__(self, msg, error_code=None):
-        self.error_code = error_code
+    def __init__(self, msg, error_code=None, ps_error_msg='', ps_error_code=None):
         self.msg = msg
+        self.error_code = error_code
+        self.ps_error_msg = ps_error_msg
+        self.ps_error_code = ps_error_code
 
     def __str__(self):
-        return repr(self.msg)
+        return repr(self.ps_error_msg)
 
 
 class PrestaShopAuthenticationError(PrestaShopWebServiceError):
@@ -147,7 +149,6 @@ class PrestaShopWebService(object):
                      "Please upgrade/downgrade this library") % (version,))
         return True
 
-<<<<<<< HEAD
     def _parse_error(self, xml_content):
         """
         Take the XML content as string and extracts the PrestaShop error
@@ -165,10 +166,7 @@ class PrestaShopWebService(object):
                 error_msg = errors.get('message')
         return error_msg
 
-    def _execute(self, url, method, body=None, add_headers=None):
-=======
     def _execute(self, url, method, data=None, add_headers=None):
->>>>>>> [IMP] replace httplib2 by resquests lib
         """
         Execute a request on the PrestaShop Webservice
 
@@ -189,36 +187,27 @@ class PrestaShopWebService(object):
             self.http_client.follow_all_redirects = True
 
         if self.debug:
-            #if body:
-            #    xml = parseString(body)
-            #    pretty_body = xml.toprettyxml(indent="  ")
-            #else:
-            #    pretty_body = body
-            print "Execute url: %s / method: %s\nbody: %s" % (url, method, data)
+            try:
+                xml = parseString(data)
+                pretty_body = xml.toprettyxml(indent="  ")
+            except:
+                pretty_body = data
+            print "Execute url: %s / method: %s\nbody: %s" % (url, method, pretty_body)
 
         request_headers = self.headers.copy()
         request_headers.update(add_headers)
 
-<<<<<<< HEAD
-        header, content = self.http_client.request(url, method, body=body, headers=request_headers)
+        header, content = self.http_client.request(url, method, body=data, headers=request_headers)
         status_code = int(header['status'])
-=======
-        r = self.client.request(method, url, data=data, headers=request_headers)
->>>>>>> [IMP] replace httplib2 by resquests lib
 
         if self.debug: # TODO better debug logs
             print ("Response code: %s\nResponse headers:\n%s\nResponse body:\n%s"
-                   % (r.status_code, r.headers, r.content))
+                   % (status_code, headers, content))
 
-<<<<<<< HEAD
         self._check_status_code(status_code, content)
         self._check_version(header.get('psws-version'))
-=======
-        self._check_status_code(r.status_code)
-        self._check_version(r.headers.get('psws-version'))
->>>>>>> [IMP] replace httplib2 by resquests lib
 
-        return r
+        return True
 
     def _parse(self, content):
         """
