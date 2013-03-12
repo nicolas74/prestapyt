@@ -188,7 +188,9 @@ class PrestaShopWebService(object):
                 self.http_client.set_auth_type("basic")
             self.http_client.follow_all_redirects = True
 
-        if self.debug and data:
+        # Don't print when method = POST, because it contains an encoded URL
+        # The print for POST is in the method add_with_url()
+        if self.debug and data and method <> 'POST':
             try:
                 xml = parseString(data)
                 pretty_body = xml.toprettyxml(indent="  ")
@@ -291,11 +293,7 @@ class PrestaShopWebService(object):
                 options['filter[%s]'%field] = '%s[%s]'%(operator, date.strftime('%Y-%m-%d %H:%M:%S'))
         return urllib.urlencode(options)
 
-<<<<<<< HEAD
-    def add(self, resource, content=None, files=None):
-=======
-    def add(self, resource, content, img_filename=None):
->>>>>>> Add support for images.
+    def add(self, resource, content=None, img_filename=None):
         """
         Add (POST) a resource. The content can be a dict of values to create.
 
@@ -304,14 +302,6 @@ class PrestaShopWebService(object):
             If a dict is given, it will be converted to XML with the necessary
             root tag ie:
             <prestashop>[[dict converted to xml]]</prestashop>
-<<<<<<< HEAD
-        @param files: a sequence of (type, filename, value) elements for data to be uploaded as files.
-        @return: an ElementTree of the response from the web service
-        """
-        return self.add_with_url(self._api_url + resource, content, files)
-
-    def add_with_url(self, url, xml=None, files=None):
-=======
             If we add an image, it should contain the binary of the image as string.
         @param img_filename: Filename of the image with its extension as string,
             for example 'myproduct.jpg'
@@ -329,38 +319,25 @@ class PrestaShopWebService(object):
 
         return self.add_with_url(self._api_url + resource, content, img_filename=img_filename)
 
-    def add_with_url(self, url, content, img_filename=None):
->>>>>>> Add support for images.
+    def add_with_url(self, url, content=None, img_filename=None):
         """
         Add (POST) a resource
 
         @param url: A full URL which for the resource type to create
-<<<<<<< HEAD
-        @param xml: Full XML as string of new resource.
-        @param files: a sequence of (type, filename, value) elements for data to be uploaded as files.
-        @return: an ElementTree of the response from the web service
-        """
-<<<<<<< HEAD
-        if files is not None:
-            headers, body = self.encode_multipart_formdata(files)
-            return self._parse(self._execute(url, 'POST', body=body, add_headers=headers)[2])
-        elif xml is not None:
-            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-            return self._parse(self._execute(url, 'POST', body=urllib.urlencode({'xml': xml.encode('utf-8')}), add_headers=headers)[2])
-        else:
-            raise PrestaShopWebServiceError('Undefined data.')
-=======
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        r = self._execute(url, 'POST', data=urllib.urlencode({'xml': xml.encode('utf-8')}), add_headers=headers)
-        return self._parse(r.content)
->>>>>>> [IMP] replace httplib2 by resquests lib
-=======
         @param content: a string containing the full XML of new resource or an image encoded in base64.
         @param img_filename: a string containing the filename of the image.
         @return: an ElementTree of the response from the web service
         """
         if not img_filename:
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            if self.debug and content:
+                try:
+                    xml = parseString(content)
+                    pretty_body = xml.toprettyxml(indent="  ")
+                except:
+                    pretty_body = content
+                print "Execute url: %s / method: POST\nbody: %s" % (url, pretty_body)
+
             r = self._execute(url, 'POST', data=urllib.urlencode({'xml': content.encode('utf-8')}), add_headers=headers)
         else:
             img_binary = base64.decodestring(content)
@@ -370,7 +347,6 @@ class PrestaShopWebService(object):
             return True
         else:
             return self._parse(r.content)
->>>>>>> Add support for images.
 
     def search(self, resource, options=None):
         """
