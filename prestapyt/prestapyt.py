@@ -94,6 +94,7 @@ class PrestaShopWebService(object):
 
         # required to hit prestashop
         self._api_url = api_url
+        self._api_key = api_key
 
         # add a trailing slash to the url if there is not one
         if not self._api_url.endswith('/'):
@@ -105,10 +106,13 @@ class PrestaShopWebService(object):
 
         # optional arguments
         self.debug = debug
+        self.client_args = client_args
         client_args.update({'auth' : (api_key, '')})
 
         # use header you coders you want, otherwise, use a default
-        self.headers = {} if headers is None else headers
+        self.headers = headers
+        if self.headers is None:
+            self.headers = {'User-agent': 'Prestapyt: Python Prestashop Library'}
 
         # init http client in the init for re-use the same connection for all call
         self.client = requests.session(**client_args)
@@ -420,7 +424,7 @@ class PrestaShopWebService(object):
         """
         return self._execute(url, 'HEAD').headers
 
-    def edit(self, resource, content):
+    def edit(self, resource, resource_id, content):
         """
         Edit (PUT) a resource.
 
@@ -429,7 +433,7 @@ class PrestaShopWebService(object):
         @param content: modified XML as string of the resource.
         @return: an ElementTree of the Webservice's response
         """
-        full_url = "%s%s" % (self._api_url, resource)
+        full_url = "%s%s/%s" % (self._api_url, resource, resource_id)
         return self.edit_with_url(full_url, content)
 
     def edit_with_url(self, url, content):
@@ -620,44 +624,20 @@ class PrestaShopWebServiceDict(PrestaShopWebService):
                 complete_content[key].update(fields[key])
         return self.edit(resource, complete_content)
 
-<<<<<<< HEAD
-    def add_with_url(self, url, content=None, files=None):
-=======
-    def add_with_url(self, url, content, img_filename=None):
->>>>>>> Add support for images.
+    def add_with_url(self, url, content=None, img_filename=None):
         """
         Add (POST) a resource
 
         @param url: A full URL which for the resource type to create
-<<<<<<< HEAD
         @param content: dict of new resource values. it will be converted to XML with the necessary root tag ie:
             <prestashop>[[dict converted to xml]]</prestashop>
-        @param files: a sequence of (type, filename, value) elements for data to be uploaded as files.
-        @return: a dict of the response from the web service
-        """
-<<<<<<< HEAD
-        if content is not None and isinstance(content, dict):
-            xml_content = dict2xml.dict2xml({'prestashop': content})
-        else:
-            xml_content = content
-        return super(PrestaShopWebServiceDict, self).add_with_url(url, xml_content, files)
-=======
-        xml_content = dict2xml.dict2xml({'prestashop': content})
-        res = super(PrestaShopWebServiceDict, self).add_with_url(url, xml_content)
-<<<<<<< HEAD
-        return res['prestashop'][res['prestashop'].keys()[0]]['id'] 
->>>>>>> [IMP] fix encoding bug, remove useless parameter for edit
-=======
-        return res['prestashop'][res['prestashop'].keys()[0]]['id']
->>>>>>> [IMP] prestaspyt add date filter
-=======
         @param content: a string containing the full XML of new resource
            or an image encoded in base64.
         @param img_filename: a string containing the filename of the image.
         @return: a dict of the response from the web service or True if the
            response is a binary.
         """
-        if isinstance(content, dict):
+        if content is not None and isinstance(content, dict):
             xml_content = dict2xml.dict2xml({'prestashop': content})
         else:
             xml_content = content
@@ -669,7 +649,6 @@ class PrestaShopWebServiceDict(PrestaShopWebService):
             return res['prestashop'][res_l2[0]]['id']
         else:
             return True
->>>>>>> Add support for images.
 
     def edit_with_url(self, url, content):
         """
