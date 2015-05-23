@@ -37,7 +37,6 @@ except ImportError, e:
     from xml.etree import ElementTree
 
 from .version import __author__, __version__
-requests.defaults.defaults['base_headers']['User-Agent'] = 'Prestapyt: Python Prestashop Library'
 
 
 class PrestaShopWebServiceError(Exception):
@@ -107,7 +106,6 @@ class PrestaShopWebService(object):
         # optional arguments
         self.debug = debug
         self.client_args = client_args
-        client_args.update({'auth' : (api_key, '')})
 
         # use header you coders you want, otherwise, use a default
         self.headers = headers
@@ -115,7 +113,8 @@ class PrestaShopWebService(object):
             self.headers = {'User-agent': 'Prestapyt: Python Prestashop Library'}
 
         # init http client in the init for re-use the same connection for all call
-        self.client = requests.session(**client_args)
+        self.client = requests.session()
+        self.client.auth = (api_key, '')
 
     def _check_status_code(self, status_code, content):
         """
