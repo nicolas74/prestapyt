@@ -340,7 +340,11 @@ class PrestaShopWebService(object):
                     pretty_body = content
                 print "Execute url: %s / method: POST\nbody: %s" % (url, pretty_body)
 
-            r = self._execute(url, 'POST', data=urllib.urlencode({'xml': content.encode('utf-8')}), add_headers=headers)
+            r = self._execute(
+                unicode_encode.encode(url),
+                'POST',
+                data=urllib.urlencode({'xml': unicode_encode.encode(content)}),
+                add_headers=headers)
         else:
             img_binary = base64.decodestring(content)
             img_file = StringIO(img_binary)
