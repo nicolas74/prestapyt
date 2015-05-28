@@ -46,14 +46,12 @@ class PrestaShopWebServiceError(Exception):
     from prestapyt import PrestaShopWebServiceError
     """
 
-    def __init__(self, msg, error_code=None, ps_error_msg='', ps_error_code=None):
+    def __init__(self, msg, error_code=None):
         self.msg = msg
         self.error_code = error_code
-        self.ps_error_msg = ps_error_msg
-        self.ps_error_code = ps_error_code
 
     def __str__(self):
-        return repr(self.ps_error_msg)
+        return repr(self.msg)
 
 
 class PrestaShopAuthenticationError(PrestaShopWebServiceError):
@@ -288,8 +286,9 @@ class PrestaShopWebService(object):
         @param options: dict of options for the request
         @return: string to use in the url
         """
-        if self.debug:
-            options.update({'debug': True})
+# What is it for ?
+#        if self.debug:
+#            options.update({'debug': True})
         if options.get('date_filter'):
             options['date'] = 1
             for field, operator, date in options.pop('date_filter'):
